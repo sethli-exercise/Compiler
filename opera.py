@@ -3,10 +3,14 @@ class Opera:
     def eval(self):
         pass
 
-########################################################################################################################
-# All mathematical operators ###########################################################################################
-########################################################################################################################
-class Operator(Opera):
+class UnaryOperator(Opera):
+    def __init__(self, value: any):
+        self.value = value
+
+    def eval(self):
+        pass
+
+class BinaryOperator(Opera):
     def __init__(self, left: any, right: any):
         self.left = left
         self.right = right
@@ -14,42 +18,46 @@ class Operator(Opera):
     def eval(self):
         pass
 
-class Plus(Operator):
+########################################################################################################################
+# All mathematical operators ###########################################################################################
+########################################################################################################################
+
+class Plus(BinaryOperator):
     def __init__(self, left: any, right: any):
         super().__init__(left, right)
 
     def eval(self):
         return self.left + self.right
-
-class Minus(Operator):
+####################################################
+class Minus(BinaryOperator):
     def __init__(self, left: any, right: any):
         super().__init__(left, right)
 
     def eval(self):
         return self.left - self.right
-
-class Multiply(Operator):
+####################################################
+class Multiply(BinaryOperator):
     def __init__(self, left: any, right: any):
         super().__init__(left, right)
 
     def eval(self):
         return self.left * self.right
-
-class Divide(Operator):
+####################################################
+class Divide(BinaryOperator):
     def __init__(self, left: any, right: any):
         super().__init__(left, right)
 
     def eval(self):
         return self.left / self.right
-
-class Power(Operator):
+####################################################
+class Power(BinaryOperator):
     def __init__(self, left: any, right: any):
         super().__init__(left, right)
 
     def eval(self):
         return self.left ** self.right
-
-class Modulus(Operator):
+####################################################
+class Modulus(BinaryOperator):
     def __init__(self, left: any, right: any):
         super().__init__(left, right)
 
@@ -59,7 +67,55 @@ class Modulus(Operator):
 ########################################################################################################################
 
 ########################################################################################################################
-# All mathematical operands ############################################################################################
+# All logical operators ################################################################################################
+########################################################################################################################
+class And(BinaryOperator):
+    def __init__(self, left: any, right: any):
+        super().__init__(left, right)
+
+    def eval(self) -> bool:
+        return self.left and self.right
+####################################################
+class Or(BinaryOperator):
+    def __init__(self, left: any, right: any):
+        super().__init__(left, right)
+
+    def eval(self) -> bool:
+        return self.left or self.right
+####################################################
+class Xor(BinaryOperator):
+    def __init__(self, left: any, right: any):
+        super().__init__(left, right)
+
+    def eval(self) -> bool:
+        return self.left or self.right and not(self.right and self.left)
+####################################################
+class BitWiseAnd(BinaryOperator):
+    def __init__(self, left: any, right: any):
+        super().__init__(left, right)
+
+    def eval(self) -> bool:
+        return self.left & self.right
+####################################################
+class BitWiseOr(BinaryOperator):
+    def __init__(self, left: any, right: any):
+        super().__init__(left, right)
+
+    def eval(self) -> bool:
+        return self.left | self.right
+####################################################
+class Not(UnaryOperator):
+    def __init__(self, value: any):
+        super().__init__(value)
+
+    def eval(self) -> bool:
+        return not self.value
+
+########################################################################################################################
+
+
+########################################################################################################################
+# All operands #########################################################################################################
 ########################################################################################################################
 class Operand(Opera):
     def __init__(self, value: any):
