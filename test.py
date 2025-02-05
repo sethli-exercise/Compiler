@@ -30,7 +30,7 @@ def test2():
 
 def test3():
     string = "string"
-    print(string[0:2])
+    print(string[0:7])
 
 
 def main():
