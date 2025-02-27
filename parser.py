@@ -8,7 +8,7 @@ class Parser:
     #     pass
 
 class BinaryOperatorParser(Parser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         pass
 
 class UnaryOperatorParser(Parser):
@@ -19,42 +19,42 @@ class UnaryOperatorParser(Parser):
 # All mathematical operator parsers ####################################################################################
 ########################################################################################################################
 class PlusParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:2] == "+ ":
             operator.eval = opera.Plus.eval
             return 0b1000
         return 0b0000
 
 class MinusParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:2] == "- ":
             operator.eval = opera.Minus.eval
             return 0b1000
         return 0b0000
 
 class MultiplyParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:2] == "* ":
             operator.eval = opera.Multiply.eval
             return 0b1000
         return 0b0000
 
 class DivideParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:2] == "/ ":
             operator.eval = opera.Divide.eval
             return 0b1000
         return 0b0000
 
 class PowerParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:3] == "** ":
             operator.eval = opera.Power.eval
             return 0b1000
         return 0b0000
 
 class ModulusParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:2] == "% ":
             operator.eval = opera.Modulus.eval
             return 0b1000
@@ -66,21 +66,21 @@ class ModulusParser(BinaryOperatorParser):
 # All logical operator parsers #########################################################################################
 ########################################################################################################################
 class AndParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:3] == "&& ":
             operator.eval = opera.And.eval
             return 0b1000
         return 0b0000
 
 class OrParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:3] == "|| ":
             operator.eval = opera.Or.eval
             return 0b1000
         return 0b0000
 
 class XorParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:3] == "X| ":
             operator.eval = opera.Xor.eval
             return 0b1000
@@ -88,7 +88,7 @@ class XorParser(BinaryOperatorParser):
 
 
 class BitWiseAndParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:2] == "& ":
             operator.eval = opera.BitWiseAnd.eval
             return 0b1000
@@ -96,14 +96,14 @@ class BitWiseAndParser(BinaryOperatorParser):
 
 
 class BitWiseOrParser(BinaryOperatorParser):
-    def parse(self, expression: str, operator: opera.BinaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:2] == "| ":
             operator.eval = opera.Xor.eval
             return 0b1000
         return 0b0000
 
 class NotParser(UnaryOperatorParser):
-    def parse(self, expression: str, operator: opera.UnaryOperator):
+    def parse(self, expression: str, operator: opera.Opera):
         if expression[0:2] == "! ":
             operator.eval = opera.Not.eval
             return 0b1000
@@ -118,7 +118,7 @@ class NumberParser(Parser):
             return True
         return False
 
-    def parse(self, expression: str, operand: opera.Operand):
+    def parse(self, expression: str, operand: opera.Opera):
         decimal = False
 
         number = ""
@@ -138,7 +138,7 @@ class NumberParser(Parser):
         return 0b0100
 
 class BooleanParser(Parser):
-    def parse(self, expression: str, operand: opera.Operand):
+    def parse(self, expression: str, operand: opera.Opera):
         if expression[0:2] == "T ":
             operand.value = True
             return 0b0100

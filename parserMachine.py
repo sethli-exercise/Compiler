@@ -15,7 +15,17 @@ start -> ( -> operand -> operator
 '''
 
 class ParserStateMachine:
+
+    __FLAG_RIGHT_PARENTHESES = 0b0001
+    __FLAG_LEFT_PARENTHESES = 0b0010
+    __FLAG_OPERAND = 0b0100
+    __FLAG_OPERATOR = 0b1000
+
+
     def __init__(self):
+        self.paranStack = []
+        self.expressionTreeHead = None
+
         # mathematical operator parser instances
         self.plus = parser.PlusParser()
         self.Minus = parser.MinusParser()
@@ -73,45 +83,126 @@ class ParserStateMachine:
         flags = flags | self.Boolean.parse(token, expressionNode)
 
         # other parsers
-        flags = flags | self.LeftParen.parse(token, expressionNode)
-        flags = flags | self.RightParen.parse(token, expressionNode)
+        flags = flags | self.LeftParen.parse(token)
+        flags = flags | self.RightParen.parse(token)
 
         return flags
 
-    def parseExpression(self, expression):
+    def tokenize(self, expression: str):
 
-        expressionTreeHead = None
-        paranQueue = []
-        # 1st bit operators, 2nd bit operands 3rd bit left parentheses, 4th bit right parentheses
-        expectedOpera = 0b0110
-        prevLeftOperand = None
-        prevRightOperand = None
-
-
+        tokens = []
 
         upperTokenIndex = 0
         lowerTokenIndex = 0
         while True:
-
             lowerTokenIndex = upperTokenIndex
             upperTokenIndex = self.getIndexOfFirstDelim(expression[lowerTokenIndex:], " ")
 
             if upperTokenIndex == -1:
                 # could not find a delimiter
-                return
+                return tokens
 
             token = expression[lowerTokenIndex:upperTokenIndex]
-
             expressionNode = opera.Opera()
+            operaType = self.parseToken(token, expressionNode)
 
-            operaType = self.parseToken(token,expressionNode)
+            tokens.append([operaType, expressionNode])
 
-            if operaType % 2 != 0 or operaType == 0b0000:
-                # nothing was parsed or more than one thing was parsed out of the token
-                return
-            elif operaType | expectedOpera != expectedOpera:
-                # got an unexpected token
-                return
+    def moreThanOneType(self, operaType: int) -> bool:
+        digitCount = 0
 
-            #TODO save the parsed object in the tree in the correct spot
+        while operaType > 0:
+            digit = operaType % 2
+            if digit != 0:
+                digitCount += 1
 
+            operaType /= 2
+
+        if digitCount > 1:
+            return True
+        else:
+            return False
+
+    def isValidToken(self, operaType, expectedOpera):
+        if operaType < 1:
+            # nothing was parsed
+            return False
+        elif self.moreThanOneType(operaType):
+            # more than one type was parsed out of the token
+            return False
+        elif operaType | expectedOpera != expectedOpera:
+            # got an unexpected token
+            return False
+        else:
+            return True
+
+    def parseTokensUntilRightParen(self, tokens: list, expectedOpera: int):
+
+        prevOperator = None
+        prevLeftOperand = None
+
+        tmpExpressionTreeHead = None
+
+        for i in range(len(tokens)):
+
+            operaType = tokens[i][0]
+            expressionNode = tokens[i][1]
+
+            if not self.isValidToken(operaType,expectedOpera):
+                return None
+
+            if operaType == ParserStateMachine.__FLAG_LEFT_PARENTHESES:
+                expectedOpera = ParserStateMachine.__FLAG_LEFT_PARENTHESES | ParserStateMachine.__FLAG_RIGHT_PARENTHESES | ParserStateMachine.__FLAG_OPERAND
+
+                if tmpExpressionTreeHead is None:
+                    tmpExpressionTreeHead = self.parseTokensUntilRightParen(tokens[i+1:],expectedOpera)
+                else:
+                    tmpExpressionTreeHead.right = self.parseTokensUntilRightParen(tokens[i+1:],expectedOpera)
+
+
+
+            elif operaType == ParserStateMachine.__FLAG_RIGHT_PARENTHESES:
+                return tmpExpressionTreeHead
+
+            elif operaType == ParserStateMachine.__FLAG_OPERAND:
+                expectedOpera = ParserStateMachine.__FLAG_OPERATOR | ParserStateMachine.__FLAG_RIGHT_PARENTHESES
+
+                if prevOperator is not None and prevOperator.right is None:
+                    prevOperator.right = expressionNode
+                elif prevLeftOperand is None:
+                    prevLeftOperand = expressionNode
+
+                
+
+            elif operaType == ParserStateMachine.__FLAG_OPERATOR:
+                expectedOpera = ParserStateMachine.__FLAG_OPERAND | ParserStateMachine.__FLAG_LEFT_PARENTHESES
+
+                if tmpExpressionTreeHead is not None:
+                    expressionNode.left = tmpExpressionTreeHead
+
+                if prevLeftOperand is not None:
+                    expressionNode.left = prevLeftOperand
+                    prevLeftOperand = None
+                else:
+                    return #something went wrong
+
+                tmpExpressionTreeHead = expressionNode
+                prevOperator = expressionNode
+
+
+
+        return tmpExpressionTreeHead
+
+    def parseExpression(self, expression: str):
+
+        self.expressionTreeHead = None
+
+        expectedOpera = ParserStateMachine.__FLAG_LEFT_PARENTHESES | ParserStateMachine.__FLAG_OPERAND
+
+        tokens = self.tokenize(expression)
+
+        # construct the tree recursively
+        self.expressionTreeHead = self.parseTokensUntilRightParen(tokens, expectedOpera)
+
+        # evaluate using DFS
+        return self.expressionTreeHead.eval()
