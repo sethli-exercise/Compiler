@@ -1,18 +1,14 @@
 import parser
 import opera
 
-
-'''
-      /------------------------\
-     /                /\        \   
-    /   operand       ) -> operator
-   /   /             /
-start -> ( -> operand -> operator
-      \ \/ \
-       \    \
-        operator -> invalid
-
-'''
+#       /------------------------\
+#      /                /\        \
+#     /   operand       ) -> operator
+#    /   /             /
+# start -> ( -> operand -> operator
+#       \ \/ \
+#        \    \
+#         operator -> invalid
 
 class ParserStateMachine:
 
@@ -23,15 +19,15 @@ class ParserStateMachine:
 
 
     def __init__(self):
-        self.paranStack = []
+        # self.paranStack = []
         self.expressionTreeHead = None
 
         # mathematical operator parser instances
-        self.plus = parser.PlusParser()
+        self.Plus = parser.PlusParser()
         self.Minus = parser.MinusParser()
         self.Multiply = parser.MultiplyParser()
         self.Divide = parser.DivideParser()
-        self.Power = parser.PowerParser
+        self.Power = parser.PowerParser()
         self.Modulus = parser.ModulusParser()
 
         # logical operator parser instances
@@ -52,18 +48,10 @@ class ParserStateMachine:
 
         return
 
-    def getIndexOfFirstDelim(self, expression: str, delim: chr):
-        for i in range(len(expression)):
-            if expression[i] == delim:
-                # slice operator is right operand is exclusive so add 1
-                return i + 1
-
-        return -1
-
     def parseToken(self, token: str, expressionNode: opera.Opera):
         flags = 0b0000
 
-        flags = flags | self.plus.parse(token, expressionNode)
+        flags = flags | self.Plus.parse(token, expressionNode)
         flags = flags | self.Minus.parse(token, expressionNode)
         flags = flags | self.Multiply.parse(token, expressionNode)
         flags = flags | self.Divide.parse(token, expressionNode)
@@ -92,21 +80,15 @@ class ParserStateMachine:
 
         tokens = []
 
-        upperTokenIndex = 0
-        lowerTokenIndex = 0
-        while True:
-            lowerTokenIndex = upperTokenIndex
-            upperTokenIndex = self.getIndexOfFirstDelim(expression[lowerTokenIndex:], " ")
+        unparsed = expression.split(" ")
 
-            if upperTokenIndex == -1:
-                # could not find a delimiter
-                return tokens
-
-            token = expression[lowerTokenIndex:upperTokenIndex]
+        for token in unparsed:
             expressionNode = opera.Opera()
             operaType = self.parseToken(token, expressionNode)
 
-            tokens.append([operaType, expressionNode])
+            tokens.append([operaType,expressionNode])
+
+        return tokens
 
     def moreThanOneType(self, operaType: int) -> bool:
         digitCount = 0
@@ -116,7 +98,7 @@ class ParserStateMachine:
             if digit != 0:
                 digitCount += 1
 
-            operaType /= 2
+            operaType //= 2
 
         if digitCount > 1:
             return True
@@ -136,64 +118,77 @@ class ParserStateMachine:
         else:
             return True
 
-    def parseTokensUntilRightParen(self, tokens: list, expectedOpera: int):
+    # recursively parse the tokens from left to right
+    # if the current token is a left parentheses recurse
+    # if the current token is a right parentheses exit the current recursion
+    def parseTokensUntilRightParen(self, tokens: list, expectedOpera: int, index: int=0):
 
         prevOperator = None
         prevLeftOperand = None
 
         tmpExpressionTreeHead = None
 
-        for i in range(len(tokens)):
 
-            operaType = tokens[i][0]
-            expressionNode = tokens[i][1]
+        numTokens = len(tokens)
+        while index < numTokens:
+
+            operaType = tokens[index][0]
+            expressionNode = tokens[index][1]
 
             if not self.isValidToken(operaType,expectedOpera):
                 return None
 
             if operaType == ParserStateMachine.__FLAG_LEFT_PARENTHESES:
                 expectedOpera = ParserStateMachine.__FLAG_LEFT_PARENTHESES | ParserStateMachine.__FLAG_RIGHT_PARENTHESES | ParserStateMachine.__FLAG_OPERAND
+                index += 1
 
+                # recursively parse the expression in the parentheses and set "i" past the right parentheses of the expression
                 if tmpExpressionTreeHead is None:
-                    tmpExpressionTreeHead = self.parseTokensUntilRightParen(tokens[i+1:],expectedOpera)
+                    tmpExpressionTreeHead, index, expectedOpera = self.parseTokensUntilRightParen(tokens,expectedOpera, index)
                 else:
-                    tmpExpressionTreeHead.right = self.parseTokensUntilRightParen(tokens[i+1:],expectedOpera)
-
+                    tmpExpressionTreeHead.right, index, expectedOpera = self.parseTokensUntilRightParen(tokens,expectedOpera, index)
 
 
             elif operaType == ParserStateMachine.__FLAG_RIGHT_PARENTHESES:
-                return tmpExpressionTreeHead
+                # recursive base case
+                expectedOpera = ParserStateMachine.__FLAG_OPERATOR | ParserStateMachine.__FLAG_RIGHT_PARENTHESES
+                return tmpExpressionTreeHead, index, expectedOpera
 
             elif operaType == ParserStateMachine.__FLAG_OPERAND:
                 expectedOpera = ParserStateMachine.__FLAG_OPERATOR | ParserStateMachine.__FLAG_RIGHT_PARENTHESES
 
+                # if the last seen operator has an empty right side fill it with the current operand
                 if prevOperator is not None and prevOperator.right is None:
                     prevOperator.right = expressionNode
+                # otherwise save the operand for later
                 elif prevLeftOperand is None:
                     prevLeftOperand = expressionNode
-
-                
 
             elif operaType == ParserStateMachine.__FLAG_OPERATOR:
                 expectedOpera = ParserStateMachine.__FLAG_OPERAND | ParserStateMachine.__FLAG_LEFT_PARENTHESES
 
+                # if the expression is not empty set the left side to the head
                 if tmpExpressionTreeHead is not None:
                     expressionNode.left = tmpExpressionTreeHead
 
+                # if the left side is empty fill the left side with the last seen operand
                 if prevLeftOperand is not None:
                     expressionNode.left = prevLeftOperand
                     prevLeftOperand = None
-                else:
-                    return #something went wrong
+                # else:
+                #     return #something went wrong
 
+                # set the head pointer to the new node
                 tmpExpressionTreeHead = expressionNode
                 prevOperator = expressionNode
+
+            index += 1
 
 
 
         return tmpExpressionTreeHead
 
-    def parseExpression(self, expression: str):
+    def evalExpression(self, expression: str):
 
         self.expressionTreeHead = None
 

@@ -32,12 +32,22 @@ def test3():
     string = "string"
     print(string[0:7])
 
+def getExpressions(filepath: str) -> list:
+    file = open(filepath)
+    content = file.read()
+
+    return content.split("\n")
+
+def test4():
+    print(getExpressions("expression.txt"))
 
 def main():
     # test1()
     # test2()
-    test3()
+    test4()
     return
 
 
-main()
+
+if __name__ == "__main__":
+    main()

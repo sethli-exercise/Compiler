@@ -1,5 +1,9 @@
 
 class Opera:
+    def __init__(self):
+        self.left = None
+        self.right = None
+
     def eval(self):
         pass
 
